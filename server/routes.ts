@@ -8,268 +8,143 @@ import {
   insertCategorySchema 
 } from "@shared/schema";
 
-export async function registerRoutes(app: Express): Promise<Server> {
-  // Dynamic model schemas
-  const modelSchemas = {
-    users: insertUserSchema,
-    products: insertProductSchema,
-    orders: insertOrderSchema,
-    categories: insertCategorySchema,
-  };
+// Entity configuration for dynamic CRUD generation
+const entities = [
+  {
+    name: "users",
+    displayName: "Users",
+    schema: insertUserSchema,
+    methods: {
+      getAll: storage.getUsers.bind(storage),
+      getOne: storage.getUser.bind(storage),
+      create: storage.createUser.bind(storage),
+      update: storage.updateUser.bind(storage),
+      delete: storage.deleteUser.bind(storage),
+    }
+  },
+  {
+    name: "products",
+    displayName: "Products", 
+    schema: insertProductSchema,
+    methods: {
+      getAll: storage.getProducts.bind(storage),
+      getOne: storage.getProduct.bind(storage),
+      create: storage.createProduct.bind(storage),
+      update: storage.updateProduct.bind(storage),
+      delete: storage.deleteProduct.bind(storage),
+    }
+  },
+  {
+    name: "orders",
+    displayName: "Orders",
+    schema: insertOrderSchema,
+    methods: {
+      getAll: storage.getOrders.bind(storage),
+      getOne: storage.getOrder.bind(storage),
+      create: storage.createOrder.bind(storage),
+      update: storage.updateOrder.bind(storage),
+      delete: storage.deleteOrder.bind(storage),
+    }
+  },
+  {
+    name: "categories",
+    displayName: "Categories",
+    schema: insertCategorySchema,
+    methods: {
+      getAll: storage.getCategories.bind(storage),
+      getOne: storage.getCategory.bind(storage),
+      create: storage.createCategory.bind(storage),
+      update: storage.updateCategory.bind(storage),
+      delete: storage.deleteCategory.bind(storage),
+    }
+  }
+];
 
+export async function registerRoutes(app: Express): Promise<Server> {
   // Get available models
   app.get("/api/models", async (req, res) => {
     try {
-      const models = [
-        { name: "users", displayName: "Users", count: (await storage.getUsers()).length },
-        { name: "products", displayName: "Products", count: (await storage.getProducts()).length },
-        { name: "orders", displayName: "Orders", count: (await storage.getOrders()).length },
-        { name: "categories", displayName: "Categories", count: (await storage.getCategories()).length },
-      ];
+      const models = await Promise.all(
+        entities.map(async (entity) => ({
+          name: entity.name,
+          displayName: entity.displayName,
+          count: (await entity.methods.getAll()).length,
+        }))
+      );
       res.json(models);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch models" });
     }
   });
 
-  // Users CRUD
-  app.get("/api/users", async (req, res) => {
-    try {
-      const users = await storage.getUsers();
-      res.json(users);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch users" });
-    }
-  });
-
-  app.get("/api/users/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const user = await storage.getUser(id);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
+  // Dynamic CRUD route generation - loop through all entities
+  entities.forEach((entity) => {
+    const entityName = entity.name;
+    const capitalizedName = entity.displayName.slice(0, -1); // Remove 's' from plural
+    
+    // GET all records
+    app.get(`/api/${entityName}`, async (req, res) => {
+      try {
+        const records = await entity.methods.getAll();
+        res.json(records);
+      } catch (error) {
+        res.status(500).json({ message: `Failed to fetch ${entityName}` });
       }
-      res.json(user);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch user" });
-    }
-  });
+    });
 
-  app.post("/api/users", async (req, res) => {
-    try {
-      const userData = insertUserSchema.parse(req.body);
-      const user = await storage.createUser(userData);
-      res.status(201).json(user);
-    } catch (error: any) {
-      res.status(400).json({ message: error.message || "Failed to create user" });
-    }
-  });
-
-  app.put("/api/users/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const userData = insertUserSchema.partial().parse(req.body);
-      const user = await storage.updateUser(id, userData);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
+    // GET single record by ID
+    app.get(`/api/${entityName}/:id`, async (req, res) => {
+      try {
+        const id = parseInt(req.params.id);
+        const record = await entity.methods.getOne(id);
+        if (!record) {
+          return res.status(404).json({ message: `${capitalizedName} not found` });
+        }
+        res.json(record);
+      } catch (error) {
+        res.status(500).json({ message: `Failed to fetch ${entityName.slice(0, -1)}` });
       }
-      res.json(user);
-    } catch (error: any) {
-      res.status(400).json({ message: error.message || "Failed to update user" });
-    }
-  });
+    });
 
-  app.delete("/api/users/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const deleted = await storage.deleteUser(id);
-      if (!deleted) {
-        return res.status(404).json({ message: "User not found" });
+    // POST create new record
+    app.post(`/api/${entityName}`, async (req, res) => {
+      try {
+        const data = entity.schema.parse(req.body);
+        const record = await entity.methods.create(data);
+        res.status(201).json(record);
+      } catch (error: any) {
+        res.status(400).json({ message: error.message || `Failed to create ${entityName.slice(0, -1)}` });
       }
-      res.status(204).send();
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete user" });
-    }
-  });
+    });
 
-  // Products CRUD
-  app.get("/api/products", async (req, res) => {
-    try {
-      const products = await storage.getProducts();
-      res.json(products);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch products" });
-    }
-  });
-
-  app.get("/api/products/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const product = await storage.getProduct(id);
-      if (!product) {
-        return res.status(404).json({ message: "Product not found" });
+    // PUT update existing record
+    app.put(`/api/${entityName}/:id`, async (req, res) => {
+      try {
+        const id = parseInt(req.params.id);
+        const data = entity.schema.partial().parse(req.body);
+        const record = await entity.methods.update(id, data);
+        if (!record) {
+          return res.status(404).json({ message: `${capitalizedName} not found` });
+        }
+        res.json(record);
+      } catch (error: any) {
+        res.status(400).json({ message: error.message || `Failed to update ${entityName.slice(0, -1)}` });
       }
-      res.json(product);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch product" });
-    }
-  });
+    });
 
-  app.post("/api/products", async (req, res) => {
-    try {
-      const productData = insertProductSchema.parse(req.body);
-      const product = await storage.createProduct(productData);
-      res.status(201).json(product);
-    } catch (error: any) {
-      res.status(400).json({ message: error.message || "Failed to create product" });
-    }
-  });
-
-  app.put("/api/products/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const productData = insertProductSchema.partial().parse(req.body);
-      const product = await storage.updateProduct(id, productData);
-      if (!product) {
-        return res.status(404).json({ message: "Product not found" });
+    // DELETE record
+    app.delete(`/api/${entityName}/:id`, async (req, res) => {
+      try {
+        const id = parseInt(req.params.id);
+        const deleted = await entity.methods.delete(id);
+        if (!deleted) {
+          return res.status(404).json({ message: `${capitalizedName} not found` });
+        }
+        res.status(204).send();
+      } catch (error) {
+        res.status(500).json({ message: `Failed to delete ${entityName.slice(0, -1)}` });
       }
-      res.json(product);
-    } catch (error: any) {
-      res.status(400).json({ message: error.message || "Failed to update product" });
-    }
-  });
-
-  app.delete("/api/products/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const deleted = await storage.deleteProduct(id);
-      if (!deleted) {
-        return res.status(404).json({ message: "Product not found" });
-      }
-      res.status(204).send();
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete product" });
-    }
-  });
-
-  // Orders CRUD
-  app.get("/api/orders", async (req, res) => {
-    try {
-      const orders = await storage.getOrders();
-      res.json(orders);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch orders" });
-    }
-  });
-
-  app.get("/api/orders/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const order = await storage.getOrder(id);
-      if (!order) {
-        return res.status(404).json({ message: "Order not found" });
-      }
-      res.json(order);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch order" });
-    }
-  });
-
-  app.post("/api/orders", async (req, res) => {
-    try {
-      const orderData = insertOrderSchema.parse(req.body);
-      const order = await storage.createOrder(orderData);
-      res.status(201).json(order);
-    } catch (error: any) {
-      res.status(400).json({ message: error.message || "Failed to create order" });
-    }
-  });
-
-  app.put("/api/orders/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const orderData = insertOrderSchema.partial().parse(req.body);
-      const order = await storage.updateOrder(id, orderData);
-      if (!order) {
-        return res.status(404).json({ message: "Order not found" });
-      }
-      res.json(order);
-    } catch (error: any) {
-      res.status(400).json({ message: error.message || "Failed to update order" });
-    }
-  });
-
-  app.delete("/api/orders/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const deleted = await storage.deleteOrder(id);
-      if (!deleted) {
-        return res.status(404).json({ message: "Order not found" });
-      }
-      res.status(204).send();
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete order" });
-    }
-  });
-
-  // Categories CRUD
-  app.get("/api/categories", async (req, res) => {
-    try {
-      const categories = await storage.getCategories();
-      res.json(categories);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch categories" });
-    }
-  });
-
-  app.get("/api/categories/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const category = await storage.getCategory(id);
-      if (!category) {
-        return res.status(404).json({ message: "Category not found" });
-      }
-      res.json(category);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch category" });
-    }
-  });
-
-  app.post("/api/categories", async (req, res) => {
-    try {
-      const categoryData = insertCategorySchema.parse(req.body);
-      const category = await storage.createCategory(categoryData);
-      res.status(201).json(category);
-    } catch (error: any) {
-      res.status(400).json({ message: error.message || "Failed to create category" });
-    }
-  });
-
-  app.put("/api/categories/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const categoryData = insertCategorySchema.partial().parse(req.body);
-      const category = await storage.updateCategory(id, categoryData);
-      if (!category) {
-        return res.status(404).json({ message: "Category not found" });
-      }
-      res.json(category);
-    } catch (error: any) {
-      res.status(400).json({ message: error.message || "Failed to update category" });
-    }
-  });
-
-  app.delete("/api/categories/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const deleted = await storage.deleteCategory(id);
-      if (!deleted) {
-        return res.status(404).json({ message: "Category not found" });
-      }
-      res.status(204).send();
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete category" });
-    }
+    });
   });
 
   const httpServer = createServer(app);
