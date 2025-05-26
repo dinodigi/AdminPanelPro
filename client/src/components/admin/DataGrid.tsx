@@ -31,13 +31,27 @@ export default function DataGrid({
   const [searchTerm, setSearchTerm] = useState("");
   const [pageSize, setPageSize] = useState(25);
   const [currentPage, setCurrentPage] = useState(1);
+  const [showFilters, setShowFilters] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [activeFilter, setActiveFilter] = useState("all");
   const { toast } = useToast();
 
-  const filteredData = data.filter(item =>
-    Object.values(item).some(value =>
+  const filteredData = data.filter(item => {
+    // Search filter
+    const matchesSearch = searchTerm === "" || Object.values(item).some(value =>
       value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  );
+    );
+
+    // Status filter
+    const matchesStatus = statusFilter === "all" || (item.status && item.status.toLowerCase() === statusFilter);
+
+    // Active filter
+    const matchesActive = activeFilter === "all" || 
+      (activeFilter === "active" && item.active === true) ||
+      (activeFilter === "inactive" && item.active === false);
+
+    return matchesSearch && matchesStatus && matchesActive;
+  });
 
   const totalPages = Math.ceil(filteredData.length / pageSize);
   const startIndex = (currentPage - 1) * pageSize;
@@ -158,7 +172,12 @@ export default function DataGrid({
                 <span className="text-sm text-slate-600">entries</span>
               </div>
               
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowFilters(!showFilters)}
+                className={showFilters ? "bg-primary/10 text-primary" : ""}
+              >
                 <Filter className="w-4 h-4 mr-1" />
                 Filters
               </Button>
@@ -169,6 +188,58 @@ export default function DataGrid({
             </div>
           </div>
         </div>
+
+        {/* Filter Panel */}
+        {showFilters && (
+          <div className="px-6 py-4 border-b border-slate-200 bg-slate-25">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">Status</label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All statuses</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">Active Status</label>
+                <Select value={activeFilter} onValueChange={setActiveFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All records" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All records</SelectItem>
+                    <SelectItem value="active">Active only</SelectItem>
+                    <SelectItem value="inactive">Inactive only</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex items-end">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    setStatusFilter("all");
+                    setActiveFilter("all");
+                    setSearchTerm("");
+                  }}
+                  className="w-full"
+                >
+                  Clear Filters
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Table */}
         <div className="overflow-x-auto">

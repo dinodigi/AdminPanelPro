@@ -100,24 +100,14 @@ export default function CreateEditModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-lg font-semibold text-slate-800">
-              {title}
-            </DialogTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleClose}
-              className="text-slate-400 hover:text-slate-600"
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
+          <DialogTitle className="text-lg font-semibold text-slate-800">
+            {title}
+          </DialogTitle>
         </DialogHeader>
 
-        <div className="overflow-y-auto flex-1" style={{ maxHeight: 'calc(90vh - 120px)' }}>
+        <div className="overflow-y-auto flex-1" style={{ maxHeight: 'calc(90vh - 160px)' }}>
           <DynamicForm
             fields={fields}
             data={formData}
@@ -126,7 +116,7 @@ export default function CreateEditModal({
           />
         </div>
 
-        <DialogFooter className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-200">
+        <DialogFooter className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-200 mt-4">
           <Button
             variant="outline"
             onClick={handleClose}
