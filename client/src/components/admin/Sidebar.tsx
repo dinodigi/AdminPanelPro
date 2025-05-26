@@ -82,7 +82,14 @@ export default function Sidebar() {
           <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">
             System
           </h3>
-          <button className="w-full flex items-center space-x-3 px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors duration-200">
+          <button 
+            onClick={() => setLocation('/settings')}
+            className={`w-full flex items-center space-x-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
+              location === '/settings'
+                ? 'bg-primary/10 text-primary border border-primary/20'
+                : 'text-slate-600 hover:text-slate-800 hover:bg-slate-100'
+            }`}
+          >
             <Settings className="w-4 h-4" />
             <span>Settings</span>
           </button>

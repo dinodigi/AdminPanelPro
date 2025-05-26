@@ -34,16 +34,17 @@ export default function Settings() {
   };
 
   return (
-    <div className="flex-1 p-6 space-y-6">
-      <div className="bg-white border-b border-slate-200 px-6 py-4 rounded-t-xl">
-        <h2 className="text-xl font-semibold text-slate-800">Settings</h2>
-        <p className="text-sm text-slate-500">
-          Configure your admin dashboard preferences and system settings
-        </p>
-      </div>
+    <AdminLayout>
+      <div className="flex-1 p-6 space-y-6">
+        <div className="bg-white border-b border-slate-200 px-6 py-4 rounded-t-xl">
+          <h2 className="text-xl font-semibold text-slate-800">Settings</h2>
+          <p className="text-sm text-slate-500">
+            Configure your admin dashboard preferences and system settings
+          </p>
+        </div>
 
-      <div className="grid gap-6">
-        {/* General Settings */}
+        <div className="grid gap-6">
+          {/* General Settings */}
         <Card>
           <CardHeader>
             <div className="flex items-center space-x-2">
@@ -200,7 +201,8 @@ export default function Settings() {
             Save Settings
           </Button>
         </div>
+        </div>
       </div>
-    </div>
+    </AdminLayout>
   );
 }
