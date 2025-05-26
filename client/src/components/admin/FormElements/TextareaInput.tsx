@@ -22,7 +22,7 @@ export default function TextareaInput({ field, value, onChange, error }: Textare
 
   // Dehydrate: Prepare form data for saving
   const dehydrate = (formValue: string): string => {
-    return formValue.trim();
+    return formValue ? formValue.trim() : '';
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
