@@ -7,8 +7,10 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Initialize database with seed data
-seedDatabase().catch(console.error);
+// Initialize database with seed data after a delay to ensure DB connection is ready
+setTimeout(() => {
+  seedDatabase().catch(console.error);
+}, 1000);
 
 app.use((req, res, next) => {
   const start = Date.now();
