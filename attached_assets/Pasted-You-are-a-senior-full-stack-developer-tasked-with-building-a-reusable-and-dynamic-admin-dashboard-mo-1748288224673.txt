@@ -1,0 +1,138 @@
+You are a senior full-stack developer tasked with building a reusable and dynamic admin-dashboard module for our modular app architecture system.
+
+🧩 Project Context:
+- Our architecture is modular. Each module is self-contained and reusable across projects.
+- You're building the **admin-dashboard** module — its purpose is to dynamically scaffold CRUD interfaces (grid and edit pages) and APIs based on schema definitions provided in model files.
+- Inspired by systems like Laravel Filament, but this implementation must be custom and schema-driven.
+
+📐 Core Philosophy:
+- Every model has a corresponding schema file.
+- The schema defines:
+   - Columns to show in the grid/table view.
+   - Field types and UI form elements for the edit/create pages.
+   - Datatypes (string, number, date, etc.).
+   - The ability to support **custom form element types** via classes that define logic like `hydrate` and `dehydrate`.
+
+📦 Requirements:
+
+1. **Tech Stack**:
+   - Backend: Node.js with Express
+   - Frontend: React (using Vite preferred, Tailwind optional)
+   - Use mock data or lightweight file-based DB (e.g., lowdb or mock JSON) to simulate DB operations
+   - Avoid overengineering — focus on core functionality and clean abstraction
+
+2. **Model Definition Example** (for inspiration):
+```js
+// /models/UserModel.js
+export default function getUserSchema() {
+  return {
+    modelName: 'User',
+    apiBase: '/api/users',
+    columns: [
+      { name: 'id', label: 'ID', type: 'number' },
+      { name: 'name', label: 'Name', type: 'string' },
+      { name: 'email', label: 'Email', type: 'string' },
+      { name: 'createdAt', label: 'Created At', type: 'date' },
+    ],
+    form: [
+      { name: 'name', type: 'text', label: 'Full Name' },
+      { name: 'email', type: 'email', label: 'Email Address' },
+      { name: 'role', type: 'select', label: 'Role', options: ['Admin', 'Editor'] },
+    ],
+  };
+}
+
+Module Features:
+
+
+Dynamically scaffold:
+
+
+Table/Grid view using schema columns
+
+
+CRUD routes and REST API from model schema
+
+
+Edit/Create form pages from form field definitions
+
+
+Support for custom form element types:
+
+
+Developers can create reusable form components (classes/functions) that define:
+
+
+hydrate(state) – to convert stored data into form-compatible input
+
+
+dehydrate(value) – to prepare submitted form data for saving
+
+
+Allow form elements to plug in custom logic and components
+
+
+/admin-dashboard
+  /backend
+    /models
+    /routes
+    /controllers
+    index.js
+  /frontend
+    /components
+      /FormElements
+    /pages
+      /[model]
+        Grid.jsx
+        Edit.jsx
+  README.md
+
+System Behavior:
+
+
+On load, the dashboard should detect available models and dynamically route to their grid and edit pages.
+
+
+Each model’s schema should drive:
+
+
+API exposure (GET /api/model, POST, PUT, DELETE)
+
+
+Grid display (columns)
+
+
+Edit page form fields
+
+
+Custom field logic (optional)
+
+
+📄 Output Instructions:
+Generate a full working module as a Replit project.
+
+
+Provide clean, well-commented code.
+
+
+Ensure backend API and frontend forms communicate correctly.
+
+
+Include mock data or a fake DB to simulate persistence.
+
+
+Add a README with setup and usage instructions.
+
+
+Clearly comment TODO areas for where future developers can extend models, add custom fields, etc.
+
+
+🎯 Objective:
+ This admin dashboard module will serve as a scaffold engine for future models. Once this pattern is established, we will use AI to build new modules automatically by just defining schema files.
+
+---
+
+Let me know if you'd like me to **write a first model schema file** or create a **scaffold template** in JSON or JS to plug into the system.
+
+
+
